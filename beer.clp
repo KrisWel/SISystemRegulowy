@@ -390,7 +390,8 @@
 
 (defrule nagging-wife  ""
 
-   (logical (naggingWife Yes))
+   (logical (naggingWife Yes)
+	    (tailgateFratParty Yes))
    
    =>
 
@@ -399,7 +400,8 @@
 
 (defrule no-nagging-wife  ""
 
-   (logical (naggingWife No))
+   (logical (naggingWife No)
+	    (tailgateFratParty Yes))
    
    =>
 
@@ -408,7 +410,8 @@
 
 (defrule is-guinness  ""
 
-   (logical (guinness Yes))
+   (logical (guinness Yes)
+	    (tailgateFratParty No))
    
    =>
 
@@ -418,7 +421,8 @@
 
 (defrule paying-in-change  ""
 
-   (logical (payingInChange Yes))
+   (logical (payingInChange Yes)
+	    (summer Yes))
    
    =>
 
@@ -429,7 +433,8 @@
 
 (defrule no-paying-in-change  ""
 
-   (logical (payingInChange No))
+   (logical (payingInChange No)
+	    (summer Yes))
    
    =>
 
@@ -438,7 +443,8 @@
 
 (defrule speak-french-russian  ""
 
-   (logical (frenchInRussian Yes))
+   (logical (frenchInRussian Yes)
+  	    (summer No))
    
    =>
 
@@ -457,7 +463,8 @@
 
 (defrule moved-to-parents  ""
 
-   (logical (movedToParents Yes))
+   (logical (movedToParents Yes)
+	    (graduation Yes))
    
    =>
 
@@ -467,7 +474,8 @@
 
 (defrule no-moved-to-parents  ""
 
-   (logical (movedToParents No))
+   (logical (movedToParents No)
+	    (graduation Yes))
    
    =>
 
@@ -477,7 +485,8 @@
 
 (defrule is-parrothead  ""
 
-   (logical (parrothead Yes))
+   (logical (parrothead Yes)
+	    (graduation No))
    
    =>
 
@@ -526,7 +535,8 @@
 
 (defrule no-expensive-love  ""
 
-   (logical (expensiveLove No))
+   (logical (expensiveLove No)
+	    (beerLover Yes))
    
    =>
 
@@ -536,7 +546,8 @@
 
 (defrule expensive-love  ""
 
-   (logical (expensiveLove Yes))
+   (logical (expensiveLove Yes)
+	    (beerLover Yes))
    
    =>
 
