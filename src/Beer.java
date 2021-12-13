@@ -11,7 +11,7 @@ import CLIPSJNI.*;
 
 
 class Beer implements ActionListener {
-	JLabel displayLabel;
+	JLabel label;
 	JButton nextButton;
 	JPanel choicesPanel;
 	ButtonGroup choicesButtons;
@@ -19,65 +19,78 @@ class Beer implements ActionListener {
 	
 	Environment clips;
 	boolean isExecuting = false;
-	Thread executionThread;
+	Thread thread;
 	
 	Beer() {
 		try {
-			beerResources = ResourceBundle.getBundle("resources.Beer",Locale.getDefault());
+			beerResources = ResourceBundle.getBundle("resources.Beer", Locale.getDefault());
 		}
 		catch (MissingResourceException mre) {
 			mre.printStackTrace();
 			return;
 		}
 		
-		JFrame jfrm = new JFrame(beerResources.getString("Beer"));
- 
-		//Specify FlowLayout manager
-		jfrm.getContentPane().setLayout(new GridLayout(3,1));
-		jfrm.setSize(640,480);
+		//Frame
+		JFrame frame = new JFrame(beerResources.getString("Beer"));
+		frame.getContentPane().setLayout(new GridLayout(3, 1));
+		frame.setSize(1000, 700);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setLocationRelativeTo(null);
+		frame.setIconImage(new ImageIcon("photos/beer.jpg").getImage());
+		frame.setVisible(true); 
 		
-		jfrm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      
+		//Panel
 		JPanel displayPanel = new JPanel();
-		displayLabel = new JLabel();
-		displayPanel.add(displayLabel);
-     
-		choicesPanel = new JPanel(); 
-		choicesButtons = new ButtonGroup();
 		JPanel buttonPanel = new JPanel();
+		
+		label = new JLabel();
+		label.setForeground(Color.BLACK);
+		label.setFont(new Font("Times New Roma", Font.PLAIN, 40));
+		
+		choicesPanel = new JPanel();
+		choicesButtons = new ButtonGroup();
+		
 		nextButton = new JButton(beerResources.getString("Next"));
 		nextButton.setActionCommand("Next");
-		buttonPanel.add(nextButton);
 		nextButton.addActionListener(this);
+		nextButton.setFont(new Font("Times New Roma", Font.PLAIN, 25));
+		
+		displayPanel.add(label);
+		buttonPanel.add(nextButton);
       
-		jfrm.getContentPane().add(displayPanel); 
-		jfrm.getContentPane().add(choicesPanel); 
-		jfrm.getContentPane().add(buttonPanel); 
+		frame.getContentPane().add(displayPanel); 
+		frame.getContentPane().add(choicesPanel); 
+		frame.getContentPane().add(buttonPanel); 
+		choicesPanel.setBackground(Color.YELLOW);
+		buttonPanel.setBackground(Color.YELLOW);
+		displayPanel.setBackground(Color.WHITE);
 
 		//Load the beer program
 		clips = new Environment();
 		clips.load("beer.clp");
 		clips.reset();
 		runBeer();
-      
-		jfrm.setVisible(true);  
 	}  
 
 	private void nextUIState() throws Exception {
 		//Get the state-list
-		String evalStr = "(find-all-facts ((?f state-list)) TRUE)";
-		String currentID = clips.eval(evalStr).get(0).getFactSlot("current").toString();
+		String currentUI = "(find-all-facts ((?f state-list)) TRUE)";
+		String currentID = clips.eval(currentUI).get(0).getFactSlot("current").toString();
 
 		//Get the current UI state
-		evalStr = "(find-all-facts ((?f UI-state)) " + "(eq ?f:id " + currentID + "))";
-		PrimitiveValue fv = clips.eval(evalStr).get(0);
+		currentUI = "(find-all-facts ((?f UI-state)) " + "(eq ?f:id " + currentID + "))";
+		PrimitiveValue state = clips.eval(currentUI).get(0);
       
+		boolean isFinal = false;
+		
 		//Determine the Next button states
-		if (fv.getFactSlot("state").toString().equals("final")) { 
+		if (state.getFactSlot("state").toString().equals("final")) {
+			isFinal = true;
 			nextButton.setActionCommand("Restart");
-			nextButton.setText(beerResources.getString("Restart")); 
+			nextButton.setText(beerResources.getString("Restart"));
 		}
-		else { 
+		else {
+			isFinal = false;
 			nextButton.setActionCommand("Next");
 			nextButton.setText(beerResources.getString("Next"));
 		}
@@ -86,31 +99,41 @@ class Beer implements ActionListener {
 		choicesPanel.removeAll();
 		choicesButtons = new ButtonGroup();
             
-		PrimitiveValue pv = fv.getFactSlot("valid-answers");
-      
-		String selected = fv.getFactSlot("response").toString();
+		PrimitiveValue fact = state.getFactSlot("valid-answers");
+		String selected = state.getFactSlot("response").toString();
      
-		for (int i = 0; i < pv.size(); i++) {
-			PrimitiveValue bv = pv.get(i);
-			JRadioButton rButton;
+		for (int i = 0; i < fact.size(); i++) {
+			PrimitiveValue choose = fact.get(i);
+			JRadioButton radioButton;
                         
-			if (bv.toString().equals(selected))
-				rButton = new JRadioButton(beerResources.getString(bv.toString()),true);
+			if (choose.toString().equals(selected))
+				radioButton = new JRadioButton(beerResources.getString(choose.toString()),true);
 			else
-				rButton = new JRadioButton(beerResources.getString(bv.toString()),false);
+				radioButton = new JRadioButton(beerResources.getString(choose.toString()),false);
                      
-			rButton.setActionCommand(bv.toString());
-			choicesPanel.add(rButton);
-			choicesButtons.add(rButton);
+			radioButton.setActionCommand(choose.toString());
+			radioButton.setFont(new Font("Times New Roma", Font.PLAIN, 25));
+			choicesPanel.add(radioButton);
+			choicesButtons.add(radioButton);
 		}
         
-		choicesPanel.repaint();
-      
-		//Set the label to the display text
-		String theText = beerResources.getString(fv.getFactSlot("display").symbolValue());
-		wrapLabelText(displayLabel,theText);
 		
-		executionThread = null;
+      
+		//Set the label to display text/pictures
+		String theText = beerResources.getString(state.getFactSlot("display").symbolValue());
+		if(isFinal) {
+			theText = "photos/"+theText;
+			label.setIcon((Icon) new ImageIcon(theText));
+			label.setText(null);
+		}
+		else {
+			label.setIcon(null);
+			label.setText(String.format("<html><center><div WIDTH=%d>%s</div></center></html>", 900, theText));
+		}
+		
+		choicesPanel.repaint();
+		
+		thread = null;
 		isExecuting = false;
 	}
 
@@ -142,16 +165,16 @@ class Beer implements ActionListener {
 		};
       
 		isExecuting = true;
-		executionThread = new Thread(runThread);
-		executionThread.start();
+		thread = new Thread(runThread);
+		thread.start();
 	}
 
 	public void onActionPerformed(ActionEvent ae) throws Exception { 
 		if (isExecuting) return;
       
 		//Get the state-list
-		String evalStr = "(find-all-facts ((?f state-list)) TRUE)";
-		String currentID = clips.eval(evalStr).get(0).getFactSlot("current").toString();
+		String currentUI = "(find-all-facts ((?f state-list)) TRUE)";
+		String currentID = clips.eval(currentUI).get(0).getFactSlot("current").toString();
 
 		//Handle the Next button
 		if (ae.getActionCommand().equals("Next")) {
@@ -166,51 +189,6 @@ class Beer implements ActionListener {
 			clips.reset(); 
 			runBeer();
 		}
-	}
- 
-	private void wrapLabelText(JLabel label, String text) {
-		FontMetrics fm = label.getFontMetrics(label.getFont());
-		Container container = label.getParent();
-		int containerWidth = container.getWidth();
-		int textWidth = SwingUtilities.computeStringWidth(fm,text);
-		int desiredWidth;
-
-		if (textWidth <= containerWidth)
-			desiredWidth = containerWidth;
-		else { 
-			int lines = (int) ((textWidth + containerWidth) / containerWidth);
-                  
-			desiredWidth = (int) (textWidth / lines);
-		}
-                 
-		BreakIterator boundary = BreakIterator.getWordInstance();
-		boundary.setText(text);
-   
-		StringBuffer trial = new StringBuffer();
-		StringBuffer real = new StringBuffer("<html><center>");
-   
-		int start = boundary.first();
-		for (int end = boundary.next(); end != BreakIterator.DONE; start = end, end = boundary.next()) {
-			String word = text.substring(start,end);
-			trial.append(word);
-			int trialWidth = SwingUtilities.computeStringWidth(fm,trial.toString());
-			if (trialWidth > containerWidth) {
-				trial = new StringBuffer(word);
-				real.append("<br>");
-				real.append(word);
-			}
-			else if (trialWidth > desiredWidth) {
-				trial = new StringBuffer("");
-				real.append(word);
-				real.append("<br>");
-			}
-			else
-				real.append(word);
-		}
-   
-		real.append("</html>");
-   
-		label.setText(real.toString());
 	}
      
 	public static void main(String args[]) {  

@@ -349,7 +349,7 @@
    
    =>
 
-   (assert (UI-state (display BoborDoug)
+   (assert (UI-state (display LiveInProjects)
                      (state final))))
 
 (defrule hockey-fan  ""
@@ -408,7 +408,7 @@
 
 (defrule is-guinness  ""
 
-   (logical (guinnesss Yes))
+   (logical (guinness Yes))
    
    =>
 
